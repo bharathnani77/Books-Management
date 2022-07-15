@@ -6,6 +6,7 @@ const {register,login} = require('../controller/userController')
 const {createBook, getAllBooks,getBookDetails,updateBook,deleteBook} = require('../controller/bookController')
 const {authentication, authorisation} = require('../middleware/auth')
 const {addReview, updateReview,deleteReview} = require('../controller/reviewController')
+const {uploadFile} = require('../aws/config')
 
     
 
@@ -30,5 +31,26 @@ router.delete('/books/:bookId',authentication,authorisation,deleteBook)
 router.post("/books/:bookId/review", addReview)
 router.put("/books/:bookId/review/:reviewId", updateReview)
 router.delete("/books/:bookId/review/:reviewId", deleteReview)
+
+router.post("/aws", async function(req, res){
+
+    try{
+        let files= req.files
+        if(files && files.length>0){
+            //upload to s3 and get the uploaded link
+            // res.send the link back to frontend/postman
+            let uploadedFileURL= await uploadFile( files[0] )
+            res.status(201).send({msg: "file uploaded succesfully", data: uploadedFileURL})
+        }
+        else{
+            res.status(400).send({ msg: "No file found" })
+        }
+        
+    }
+    catch(err){
+        res.status(500).send({msg: err})
+    }
+    
+})
 
 module.exports = router;

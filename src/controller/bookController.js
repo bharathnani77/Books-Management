@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const userModel = require('../models/userModel')
 const bookModel = require('../models/bookModel')
 const reviewModel = require('../models/reviewModel')
+const upload = require('../aws/config')
 
 const dateRegex = /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/ 
 
@@ -26,6 +27,8 @@ const isValidObjectId = function (objectId) {
 const createBook = async (req, res) => {
   try {
     const requestBody= req.body;
+    let files = req.files;
+    let uploadedFileURL;
     if(!isValidRequestBody(requestBody)) {
         return res.status(400).send({ status: false, message: "Invalid request, please provide valid details" })
     } 
@@ -86,6 +89,11 @@ const createBook = async (req, res) => {
     if(!dateRegex.test(releasedAt)) {
         return res.status(400).send({status: false, message: 'Release date must be in "YYYY-MM-DD"'})
     }
+
+    if(files && files.length>0){
+        uploadedFileURL = await upload.uploadFile(files[0]);
+     }
+     obj['bookCover'] = uploadedFileURL
 
     const newBook = await bookModel.create({
         title, excerpt, userId, ISBN, category, subcategory, releasedAt 
